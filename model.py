@@ -8,8 +8,13 @@ class RecommendationEngine:
     
     def __init__(self):
         """Initialize the recommendation engine with skincare dataset"""
-        self.df = self._load_dataset()
+        self.df = None
         self.concern_keywords = self._build_keyword_map()
+    
+    def _ensure_dataset_loaded(self):
+        """Lazy load dataset only when needed"""
+        if self.df is None:
+            self.df = self._load_dataset()
     
     def _load_dataset(self) -> pd.DataFrame:
         """Load skincare recommendations from CSV or embedded data"""
@@ -17,13 +22,16 @@ class RecommendationEngine:
             # Try to load from CSV file first
             csv_path = "skincare_dataset.csv"
             if os.path.exists(csv_path):
-                df = pd.read_csv(csv_path)
-                # Ensure all required columns exist
-                required_columns = ['concern', 'skin_type', 'ingredients', 'benefits', 'brands', 'notes']
-                if all(col in df.columns for col in required_columns):
-                    return df
+                try:
+                    df = pd.read_csv(csv_path)
+                    # Ensure all required columns exist
+                    required_columns = ['concern', 'skin_type', 'ingredients', 'benefits', 'brands', 'notes']
+                    if all(col in df.columns for col in required_columns):
+                        return df
+                except Exception as csv_error:
+                    print(f"Warning: CSV loading failed, using embedded data: {csv_error}")
         except Exception as e:
-            print(f"Error loading CSV: {e}")
+            print(f"Error during CSV load attempt: {e}")
         
         data = {
             'concern': [
@@ -337,6 +345,9 @@ class RecommendationEngine:
         Returns:
             Dictionary with recommendations
         """
+        # Ensure dataset is loaded
+        self._ensure_dataset_loaded()
+        
         # Extract concerns
         concerns = self._extract_concerns(user_input)
         
