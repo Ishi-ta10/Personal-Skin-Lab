@@ -12,6 +12,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Cache the engine initialization
+@st.cache_resource
+def load_engine():
+    return RecommendationEngine()
+
 st.markdown("""
 <style>
     /* Minimal, Modern Design */
@@ -208,7 +213,7 @@ st.markdown("""
 
 # Initialize session state
 if 'engine' not in st.session_state:
-    st.session_state.engine = RecommendationEngine()
+    st.session_state.engine = load_engine()
 
 if 'last_recommendation' not in st.session_state:
     st.session_state.last_recommendation = None
